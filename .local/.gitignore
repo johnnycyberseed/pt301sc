@@ -1,0 +1,8 @@
+# ignore EVERYTHING herein:
+*
+
+# except, don't ignore THIS .gitignore file:
+!.gitignore
+
+# except, don't git ignore the following files, e.g.:
+# !some_file_to_be_included_in_git.txt
