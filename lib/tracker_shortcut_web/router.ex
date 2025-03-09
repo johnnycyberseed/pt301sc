@@ -56,6 +56,9 @@ defmodule TrackerShortcutWeb.Router do
         {"Error: Unable to Redirect", "We couldn't redirect you to the corresponding Shortcut story."}
     end
 
+    # Log 200 response for the error page
+    Logger.info("200 response: Serving error page for reason '#{reason}'")
+
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, """
@@ -91,6 +94,9 @@ defmodule TrackerShortcutWeb.Router do
 
   # Simple home page with info about the service
   get "/" do
+    # Log 200 response for the home page
+    Logger.info("200 response: Serving home page")
+
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, """
@@ -147,6 +153,9 @@ defmodule TrackerShortcutWeb.Router do
     url = "https://www.pivotaltracker.com/story/show/#{tracker_id}"
     case TrackerShortcutMapper.tracker_url_to_shortcut_url(url, mapper()) do
       {:ok, shortcut_url} ->
+        # Log 301 redirect with the destination URL
+        Logger.info("301 redirect: Redirecting from #{url} to #{shortcut_url}")
+
         # Permanent redirect (301) to the Shortcut URL
         conn
         |> put_resp_header("location", shortcut_url)

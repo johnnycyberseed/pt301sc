@@ -4,6 +4,7 @@ defmodule Pt301sc.Application do
   """
 
   use Application
+  require Logger
 
   @impl true
   def start(_type, _args) do
@@ -17,6 +18,9 @@ defmodule Pt301sc.Application do
     # Get port configuration from environment or use defaults
     http_port = get_port_from_env("PT301SC_HTTP_PORT", 8080)
     https_port = get_port_from_env("PT301SC_HTTPS_PORT", 8443)
+
+    # Get hostname from environment or use default
+    hostname = System.get_env("PT301SC_HOSTNAME") || "localhost"
 
     # Define SSL options for HTTPS
     https_options = [
@@ -33,6 +37,14 @@ defmodule Pt301sc.Application do
       # Start the HTTPS Plug server
       {Plug.Cowboy, scheme: :https, plug: TrackerShortcutWeb.Router, options: https_options}
     ]
+
+    # Log server startup with port and URL information
+    Logger.info("Starting Tracker to Shortcut Mapper")
+    Logger.info("HTTP server listening on port #{http_port}")
+    Logger.info("HTTPS server listening on port #{https_port}")
+    Logger.info("Application URLs:")
+    Logger.info("  HTTP:  http://#{hostname}:#{http_port}/")
+    Logger.info("  HTTPS: https://#{hostname}:#{https_port}/")
 
     opts = [strategy: :one_for_one, name: Pt301sc.Supervisor]
     Supervisor.start_link(children, opts)
