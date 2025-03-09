@@ -1,0 +1,1 @@
+export SHORTCUT_API_TOKEN=$(op read op://Employee/shortcut-api-token/credential)
