@@ -37,11 +37,12 @@ defmodule TrackerShortcutMapperTest do
       assert %TrackerShortcutMapper{} = mapper
 
       # Test a few sample entries from the fixture file using the public interface
-      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/188732660", mapper) ==
-             {:ok, "https://app.shortcut.com/mo-vintro/story/52626"}
+      # The fixture file now contains our test data with 111111111, etc.
+      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/story/show/111111111", mapper) ==
+             {:ok, "https://app.shortcut.com/mo-vintro/story/11111"}
 
-      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/188956337", mapper) ==
-             {:ok, "https://app.shortcut.com/mo-vintro/story/52627"}
+      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/story/show/222222222", mapper) ==
+             {:ok, "https://app.shortcut.com/mo-vintro/story/22222"}
 
       # Verify the mapping is a proper map with string keys
       assert is_map(mapper.mapping)
@@ -70,9 +71,8 @@ defmodule TrackerShortcutMapperTest do
   end
 
   describe "tracker_url_to_shortcut_url/2" do
-
     test "given a Tracker Story URL, returns the corresponding Shortcut URL", ctx do
-      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/111111111", ctx.mapper) ==
+      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/story/show/111111111", ctx.mapper) ==
                {:ok, "https://app.shortcut.com/mo-vintro/story/11111"}
     end
 
@@ -87,7 +87,7 @@ defmodule TrackerShortcutMapperTest do
     end
 
     test "given a Tracker Story URL with an unknown ID, returns an error tuple", ctx do
-      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/999999999", ctx.mapper) ==
+      assert TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/story/show/999999999", ctx.mapper) ==
                {:error, :tracker_id_not_found}
     end
 

@@ -71,7 +71,7 @@ defmodule TrackerShortcutMapper do
 
       iex> mapping = %{"111111111" => "https://app.shortcut.com/org/story/11111"}
       iex> mapper = TrackerShortcutMapper.new(mapping)
-      iex> TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/111111111", mapper)
+      iex> TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/story/show/111111111", mapper)
       {:ok, "https://app.shortcut.com/org/story/11111"}
 
   """
@@ -91,7 +91,7 @@ defmodule TrackerShortcutMapper do
   Extracts the Tracker ID from a Pivotal Tracker URL.
 
   Handles different URL formats:
-  - https://www.pivotaltracker.com/stories/show/ID
+  - https://www.pivotaltracker.com/story/show/ID
   - https://www.pivotaltracker.com/n/projects/PROJECT_ID/stories/ID
   - https://www.pivotaltracker.com/epic/show/ID (returns {:epic, ID})
 
@@ -104,9 +104,9 @@ defmodule TrackerShortcutMapper do
         [[_, id]] = Regex.scan(~r{/epic/show/(\d+)}, url)
         {:epic, id}
 
-      # Format: https://www.pivotaltracker.com/stories/show/111111111
-      String.match?(url, ~r{/stories/show/(\d+)}) ->
-        [[_, id]] = Regex.scan(~r{/stories/show/(\d+)}, url)
+      # Format: https://www.pivotaltracker.com/story/show/111111111
+      String.match?(url, ~r{/story/show/(\d+)}) ->
+        [[_, id]] = Regex.scan(~r{/story/show/(\d+)}, url)
         id
 
       # Format: https://www.pivotaltracker.com/n/projects/2694117/stories/222222222
