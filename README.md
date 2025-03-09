@@ -48,13 +48,20 @@ To start the web server:
 mix run --no-halt
 ```
 
-By default, the server runs on port 4000, so you can access it at [http://localhost:4000/](http://localhost:4000/).
+By default, the server runs on port 8080 for HTTP and 8443 for HTTPS, so you can access it at:
+- HTTP: [http://localhost:8080/](http://localhost:8080/)
+- HTTPS: [https://localhost:8443/](https://localhost:8443/)
 
-The server also supports HTTPS on port 4001: [https://localhost:4001/](https://localhost:4001/)
+You can configure the ports using environment variables:
+
+```bash
+# Set custom ports
+PT301SC_HTTP_PORT=3000 PT301SC_HTTPS_PORT=3443 mix run --no-halt
+```
 
 To test the redirect functionality, visit:
-- [http://localhost:4000/story/show/111111111](http://localhost:4000/story/show/111111111)
-- [http://localhost:4000/n/projects/2694117/stories/222222222](http://localhost:4000/n/projects/2694117/stories/222222222)
+- [http://localhost:8080/story/show/111111111](http://localhost:8080/story/show/111111111)
+- [http://localhost:8080/n/projects/2694117/stories/222222222](http://localhost:8080/n/projects/2694117/stories/222222222)
 
 ## SSL Certificates
 
@@ -74,10 +81,14 @@ For production deployment, you can build a release:
 MIX_ENV=prod mix release
 ```
 
-Then run the release:
+Then run the release with optional port configuration:
 
 ```bash
+# Default ports (8080 for HTTP and 8443 for HTTPS)
 _build/prod/rel/pt301sc/bin/pt301sc start
+
+# Custom ports
+PT301SC_HTTP_PORT=80 PT301SC_HTTPS_PORT=443 _build/prod/rel/pt301sc/bin/pt301sc start
 ```
 
 ## Testing
