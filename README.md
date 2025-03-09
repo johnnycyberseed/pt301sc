@@ -50,9 +50,21 @@ mix run --no-halt
 
 By default, the server runs on port 4000, so you can access it at [http://localhost:4000/](http://localhost:4000/).
 
+The server also supports HTTPS on port 4001: [https://localhost:4001/](https://localhost:4001/)
+
 To test the redirect functionality, visit:
 - [http://localhost:4000/story/show/111111111](http://localhost:4000/story/show/111111111)
 - [http://localhost:4000/n/projects/2694117/stories/222222222](http://localhost:4000/n/projects/2694117/stories/222222222)
+
+## SSL Certificates
+
+The application uses self-signed SSL certificates for HTTPS. These certificates are stored in the `priv/cert/` directory. To generate new certificates, run:
+
+```bash
+./scripts/generate_cert.sh
+```
+
+For production use, you should replace these self-signed certificates with proper certificates from a trusted certificate authority.
 
 ## Running in Production
 
