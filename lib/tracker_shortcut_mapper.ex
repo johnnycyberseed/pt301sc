@@ -20,6 +20,48 @@ defmodule TrackerShortcutMapper do
   end
 
   @doc """
+  Creates a new TrackerShortcutMapper instance by loading a mapping from a JSON file.
+
+  The JSON file should contain a map where keys are Tracker IDs and values are Shortcut URLs.
+
+  ## Examples
+
+      # This is just a representative example - actual output will have the full mapping
+      iex> mapper = TrackerShortcutMapper.new_from_file("test/fixture/vintro-story-mapping.json")
+      iex> is_map(mapper.mapping)
+      true
+      iex> Map.has_key?(mapper.mapping, "188732660")
+      true
+
+  Raises `File.Error` if the file does not exist.
+  Raises an `ErlangError` if the file is not valid JSON.
+  """
+  def new_from_file(file_path) when is_binary(file_path) do
+    mapping = file_path
+      |> File.read!()
+      |> decode_json()
+      |> ensure_string_keys_and_values()
+
+    new(mapping)
+  end
+
+  # Wrapper for json decoding to handle any errors
+  defp decode_json(json_string) do
+    try do
+      :json.decode(json_string)
+    rescue
+      error -> raise error
+    end
+  end
+
+  # Helper function to ensure all keys and values are strings
+  defp ensure_string_keys_and_values(map) when is_map(map) do
+    map
+    |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
+    |> Enum.into(%{})
+  end
+
+  @doc """
   Converts a Pivotal Tracker URL to a Shortcut URL.
 
   Takes a Tracker URL and a TrackerShortcutMapper instance,
@@ -29,11 +71,11 @@ defmodule TrackerShortcutMapper do
 
       iex> mapping = %{"111111111" => "https://app.shortcut.com/org/story/11111"}
       iex> mapper = TrackerShortcutMapper.new(mapping)
-      iex> TrackerShortcutMapper.tracker_id_to_shortcut_url("https://www.pivotaltracker.com/stories/show/111111111", mapper)
+      iex> TrackerShortcutMapper.tracker_url_to_shortcut_url("https://www.pivotaltracker.com/stories/show/111111111", mapper)
       {:ok, "https://app.shortcut.com/org/story/11111"}
 
   """
-  def tracker_id_to_shortcut_url(url, %__MODULE__{} = mapper) do
+  def tracker_url_to_shortcut_url(url, %__MODULE__{} = mapper) do
     case extract_tracker_id(url) do
       {:epic, _} -> {:error, :epics_not_supported}
       {:error, reason} -> {:error, reason}
