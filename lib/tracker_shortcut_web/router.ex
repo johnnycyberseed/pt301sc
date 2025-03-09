@@ -103,7 +103,7 @@ defmodule TrackerShortcutWeb.Router do
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Tracker to Shortcut Redirect Service</title>
+        <title>PT301SC</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -121,7 +121,7 @@ defmodule TrackerShortcutWeb.Router do
       </head>
       <body>
         <div class="container">
-          <h1>Tracker to Shortcut Redirect Service</h1>
+          <h1>PT301SC</h1>
           <p>This service automatically redirects Pivotal Tracker URLs to their corresponding Shortcut stories.</p>
 
           <section>

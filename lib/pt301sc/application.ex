@@ -39,7 +39,7 @@ defmodule Pt301sc.Application do
     ]
 
     # Log server startup with port and URL information
-    Logger.info("Starting Tracker to Shortcut Mapper")
+    Logger.info("Starting PT301SC")
     Logger.info("HTTP server listening on port #{http_port}")
     Logger.info("HTTPS server listening on port #{https_port}")
     Logger.info("Application URLs:")

@@ -1,4 +1,4 @@
-# Tracker to Shortcut Redirector
+# PT301SC
 
 A web server that automatically redirects Pivotal Tracker URLs to their corresponding Shortcut story URLs.
 
