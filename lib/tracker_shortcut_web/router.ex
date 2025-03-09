@@ -24,32 +24,45 @@ defmodule TrackerShortcutWeb.Router do
   # Handle redirects for story URLs in format: /story/show/ID
   get "/story/show/:id" do
     tracker_id = id
-    handle_redirect(conn, tracker_id)
+    handle_redirect_with_mapper(conn, tracker_id)
   end
 
   # Handle redirects for project story URLs in format: /n/projects/PROJECT_ID/stories/ID
   get "/n/projects/:project_id/stories/:id" do
     tracker_id = id
-    handle_redirect(conn, tracker_id)
+    handle_redirect_with_mapper(conn, tracker_id)
   end
 
   # Handle redirects for epic URLs in format: /epic/show/ID
   get "/epic/show/:id" do
     conn
-    |> put_resp_header("location", "/error")
+    |> put_resp_header("location", "/error?reason=epics_not_supported")
     |> resp(302, "Redirecting to error page")
     |> halt()
   end
 
   # Error page for when redirect fails
   get "/error" do
+    reason = conn.params["reason"] || "unknown"
+
+    {title, message} = case reason do
+      "tracker_id_not_found" ->
+        {"Error: Story ID Not Found", "The Tracker story ID was not found in our mapping."}
+      "epics_not_supported" ->
+        {"Error: Epics Not Supported", "Epic URLs are not currently supported by this service."}
+      "unrecognized_url_format" ->
+        {"Error: Unrecognized URL Format", "The URL format wasn't recognized by our service."}
+      _ ->
+        {"Error: Unable to Redirect", "We couldn't redirect you to the corresponding Shortcut story."}
+    end
+
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, """
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Redirection Error</title>
+        <title>#{title}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -67,14 +80,9 @@ defmodule TrackerShortcutWeb.Router do
       </head>
       <body>
         <div class="container">
-          <h1>Error: Unable to Redirect</h1>
-          <p>We couldn't redirect you to the corresponding Shortcut story.</p>
-          <p>Possible reasons:</p>
-          <ul>
-            <li>The Tracker story ID was not found in our mapping</li>
-            <li>The URL format wasn't recognized</li>
-            <li>You're trying to redirect an Epic (which isn't supported yet)</li>
-          </ul>
+          <h1>#{title}</h1>
+          <p>#{message}</p>
+          <p><a href="/">Return to Home</a></p>
         </div>
       </body>
     </html>
@@ -100,6 +108,9 @@ defmodule TrackerShortcutWeb.Router do
             max-width: 800px;
             margin: 0 auto;
           }
+          section {
+            margin-bottom: 30px;
+          }
         </style>
       </head>
       <body>
@@ -107,32 +118,46 @@ defmodule TrackerShortcutWeb.Router do
           <h1>Tracker to Shortcut Redirect Service</h1>
           <p>This service automatically redirects Pivotal Tracker URLs to their corresponding Shortcut stories.</p>
 
-          <h2>Supported URL Formats:</h2>
-          <ul>
-            <li>https://www.pivotaltracker.com/story/show/ID</li>
-            <li>https://www.pivotaltracker.com/n/projects/PROJECT_ID/stories/ID</li>
-          </ul>
+          <section>
+            <h2>Supported URL Formats:</h2>
+            <ul>
+              <li>https://www.pivotaltracker.com/story/show/ID</li>
+              <li>https://www.pivotaltracker.com/n/projects/PROJECT_ID/stories/ID</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Service Limitations:</h2>
+            <ul>
+              <li>Epic URLs are not currently supported (e.g., https://www.pivotaltracker.com/epic/show/ID)</li>
+              <li>Only stories that exist in our mapping database can be redirected</li>
+              <li>URLs that don't match the supported formats cannot be redirected</li>
+            </ul>
+          </section>
         </div>
       </body>
     </html>
     """)
   end
 
-  # Helper function to handle redirection
-  defp handle_redirect(conn, tracker_id) do
-    case Map.get(mapper().mapping, tracker_id) do
-      nil ->
-        # Temporary redirect (302) to the error page if ID not found
-        conn
-        |> put_resp_header("location", "/error")
-        |> resp(302, "Redirecting to error page")
-        |> halt()
-
-      shortcut_url ->
+  # Helper function to handle redirection using the mapper
+  defp handle_redirect_with_mapper(conn, tracker_id) do
+    # Use the TrackerShortcutMapper.tracker_url_to_shortcut_url function
+    # instead of directly accessing the mapping
+    url = "https://www.pivotaltracker.com/story/show/#{tracker_id}"
+    case TrackerShortcutMapper.tracker_url_to_shortcut_url(url, mapper()) do
+      {:ok, shortcut_url} ->
         # Permanent redirect (301) to the Shortcut URL
         conn
         |> put_resp_header("location", shortcut_url)
         |> resp(301, "Redirecting to Shortcut")
+        |> halt()
+
+      {:error, reason} ->
+        # Temporary redirect (302) to the error page with specific reason
+        conn
+        |> put_resp_header("location", "/error?reason=#{reason}")
+        |> resp(302, "Redirecting to error page")
         |> halt()
     end
   end
@@ -140,7 +165,7 @@ defmodule TrackerShortcutWeb.Router do
   # Catch-all route
   match _ do
     conn
-    |> put_resp_header("location", "/error")
+    |> put_resp_header("location", "/error?reason=unrecognized_url_format")
     |> resp(302, "Redirecting to error page")
     |> halt()
   end

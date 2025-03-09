@@ -56,9 +56,9 @@ defmodule TrackerShortcutWebTest do
         |> conn("/story/show/999999999")
         |> Router.call([])
 
-      # We should get redirected to the error page
+      # We should get redirected to the error page with specific error parameter
       assert conn.status == 302
-      assert get_resp_header(conn, "location") == ["/error"]
+      assert get_resp_header(conn, "location") == ["/error?reason=tracker_id_not_found"]
     end
 
     test "redirects to error page for epic URLs" do
@@ -67,9 +67,9 @@ defmodule TrackerShortcutWebTest do
         |> conn("/epic/show/5282015")
         |> Router.call([])
 
-      # We should get redirected to the error page
+      # We should get redirected to the error page with specific error parameter
       assert conn.status == 302
-      assert get_resp_header(conn, "location") == ["/error"]
+      assert get_resp_header(conn, "location") == ["/error?reason=epics_not_supported"]
     end
 
     test "redirects to error page for invalid URL format" do
@@ -78,14 +78,14 @@ defmodule TrackerShortcutWebTest do
         |> conn("/invalid/format/123456")
         |> Router.call([])
 
-      # We should get redirected to the error page
+      # We should get redirected to the error page with specific error parameter
       assert conn.status == 302
-      assert get_resp_header(conn, "location") == ["/error"]
+      assert get_resp_header(conn, "location") == ["/error?reason=unrecognized_url_format"]
     end
   end
 
   describe "GET /error" do
-    test "returns an error page" do
+    test "returns a generic error page when no reason provided" do
       conn =
         :get
         |> conn("/error")
@@ -93,6 +93,45 @@ defmodule TrackerShortcutWebTest do
 
       assert conn.status == 200
       assert conn.resp_body =~ "Error: Unable to Redirect"
+      assert conn.resp_body =~ "We couldn't redirect you to the corresponding Shortcut story."
+      # Make sure the "Possible reasons" section is removed
+      refute conn.resp_body =~ "Possible reasons:"
+    end
+
+    test "returns specific error for tracker_id_not_found" do
+      conn =
+        :get
+        |> conn("/error?reason=tracker_id_not_found")
+        |> Router.call([])
+
+      assert conn.status == 200
+      assert conn.resp_body =~ "Error: Story ID Not Found"
+      assert conn.resp_body =~ "The Tracker story ID was not found in our mapping"
+      refute conn.resp_body =~ "Possible reasons:"
+    end
+
+    test "returns specific error for epics_not_supported" do
+      conn =
+        :get
+        |> conn("/error?reason=epics_not_supported")
+        |> Router.call([])
+
+      assert conn.status == 200
+      assert conn.resp_body =~ "Error: Epics Not Supported"
+      assert conn.resp_body =~ "Epic URLs are not currently supported"
+      refute conn.resp_body =~ "Possible reasons:"
+    end
+
+    test "returns specific error for unrecognized_url_format" do
+      conn =
+        :get
+        |> conn("/error?reason=unrecognized_url_format")
+        |> Router.call([])
+
+      assert conn.status == 200
+      assert conn.resp_body =~ "Error: Unrecognized URL Format"
+      assert conn.resp_body =~ "The URL format wasn't recognized"
+      refute conn.resp_body =~ "Possible reasons:"
     end
   end
 
@@ -105,6 +144,10 @@ defmodule TrackerShortcutWebTest do
 
       assert conn.status == 200
       assert conn.resp_body =~ "Tracker to Shortcut Redirect Service"
+      assert conn.resp_body =~ "Supported URL Formats:"
+      assert conn.resp_body =~ "Service Limitations:"
+      assert conn.resp_body =~ "Epic URLs are not currently supported"
+      assert conn.resp_body =~ "Only stories that exist in our mapping database can be redirected"
       # No form on homepage anymore
       refute conn.resp_body =~ "<form"
     end
