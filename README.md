@@ -1,30 +1,51 @@
 # PT301SC
 
-A web server that automatically redirects Pivotal Tracker URLs to their corresponding Shortcut story URLs.
+A proxy that allows you to follow Pivotal Tracker story links to their migrated stories in Shortcut.
 
 ## Description
 
-This service is designed to be deployed to handle requests for the `www.pivotaltracker.com` domain, automatically redirecting users to the equivalent Shortcut story. It uses a mapping file to convert between Tracker story IDs and Shortcut URLs.
+A web server containing a mapping of Pivotal Tracker story IDs to their corresponding Shortcut story URLs. When the "www.pivotaltracker.com" domain is routed to localhost and this proxy is running, it will scrape the incoming URL for the story ID, look up the corresponding Shortcut URL, and redirect to it.
 
-## Features
+## Getting Started
 
-- Automatic redirection from Tracker URLs to Shortcut URLs
-- Supports multiple Tracker URL formats:
-  - `/story/show/ID`
-  - `/n/projects/PROJECT_ID/stories/ID`
-- Returns appropriate error pages for unmapped IDs or unsupported URL types (like Epics)
-- 301 permanent redirects to maintain SEO and bookmarks
+To get going:
 
-## Installation
+1. Generate a Story Mapping file.
 
-```bash
-# Clone the repository
-git clone <repository_url>
-cd pt301sc
+   _(This repo is preloaded with the Vintro backlog; if you're using that backlog, you can skip this step.)_
 
-# Install dependencies
-mix deps.get
-```
+   If you recently migrated your Shortcut workspace, you can [Generate the Story Mapping File from a migrated Shortcut workspace](#generate-the-story-mapping-file-from-a-migrated-shortcut-workspace), below.
+   
+2. Resolve the Pivotal Tracker domain to your localhost.
+
+   ```console
+   $ ./scripts/route_pivotaltracker_to_localhost.sh
+   ```
+
+3. Start the app
+
+   ```console
+   $ ./scripts/start.sh
+   ```
+
+4. In your browser, navigate to a Pivotal Tracker URL (using Google Chrome as an example):
+
+   1. e.g. https://www.pivotaltracker.com/story/show/188947849
+
+   2. (The first time) Your browser will warn about an untrusted (self-signed) certificate: \
+      ![Browser screenshot showing self-signed certificate error](./docs/imgs/self-signed-cert-error.png)
+
+   3. Some browsers (like Google Chrome) will warn again an [HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) violation: \
+    
+      type the phrase:
+      ```
+      thisisunsafe
+      ```
+
+      ![Bypass the Google Chrome HSTS block](./docs/imgs/bypass-chrome-hsts-block.png)
+
+   4. You should now be redirected to the Shortcut story.
+
 
 ## Configuration
 
@@ -32,19 +53,39 @@ The application reads the mapping between Tracker IDs and Shortcut URLs from a J
 
 ```json
 {
-  "111111111": "https://app.shortcut.com/your-org/story/11111",
-  "222222222": "https://app.shortcut.com/your-org/story/22222"
+  "188947849": "https://app.shortcut.com/vintro/story/188947849",
+  "188947850": "https://app.shortcut.com/vintro/story/188947850"
 }
 ```
+where:
+- `188947849` is the Tracker story ID
+- `https://app.shortcut.com/vintro/story/188947849` is the corresponding Shortcut URL
 
-Where each key is a Tracker story ID and each value is the corresponding Shortcut URL.
+### Generate the Story Mapping File from a migrated Shortcut workspace
+
+If your migration tooling set the "external-links" field in your Shortcut stories, you can produce a `story_mapping.json` file directly from your Shortcut workspace (Shortcut's official [Pivotal Tracker importer](https://github.com/useshortcut/api-cookbook/tree/main/pivotal-import) tool _**does**_ set this field).
+
+1. Create a Shortcut API token
+
+   https://app.shortcut.com/settings/account/api-tokens
+
+2. Set the `SHORTCUT_API_TOKEN` environment variable:
+
+   ```bash
+   export SHORTCUT_API_TOKEN=<your-api-token>
+   ```
+
+3. Extract the story ID mapping from your Shortcut workspace:
+
+   ```bash
+   # To generate the story mapping file:
+   ./scripts/generate_story_mapping_file.sh
+   ```
 
 ## Running the Server
 
-To start the web server:
-
 ```bash
-# Start the server
+# To start the server directly:
 mix run --no-halt
 ```
 
@@ -55,7 +96,7 @@ By default, the server runs on port 8080 for HTTP and 8443 for HTTPS, so you can
 You can configure the ports using environment variables:
 
 ```bash
-# Set custom ports
+# To set custom ports:
 PT301SC_HTTP_PORT=3000 PT301SC_HTTPS_PORT=3443 mix run --no-halt
 ```
 
@@ -65,41 +106,41 @@ To test the redirect functionality, visit:
 
 ## SSL Certificates
 
-The application uses self-signed SSL certificates for HTTPS. These certificates are stored in the `priv/cert/` directory. To generate new certificates, run:
+By default (i.e. via the `./scripts/start.sh` script), the application uses self-signed SSL certificates for HTTPS.
+
+These certificates are stored in the `priv/cert/` directory:
+- `priv/cert/cert.pem` — The certificate file
+- `priv/cert/key.pem` — The private key file
 
 ```bash
+# To re-generate the certificates:
 ./scripts/generate_cert.sh
 ```
 
-For production use, you should replace these self-signed certificates with proper certificates from a trusted certificate authority.
-
 ## Running in Production
 
-For production deployment, you can build a release:
+As a mix-based application.
 
 ```bash
+# To produce a release:
 MIX_ENV=prod mix release
 ```
 
 Then run the release with optional port configuration:
 
 ```bash
-# Default ports (8080 for HTTP and 8443 for HTTPS)
+# To start with default ports (8080 for HTTP and 8443 for HTTPS)
 _build/prod/rel/pt301sc/bin/pt301sc start
+```
 
-# Custom ports
+```bash
+# To start with custom ports:
 PT301SC_HTTP_PORT=80 PT301SC_HTTPS_PORT=443 _build/prod/rel/pt301sc/bin/pt301sc start
 ```
 
 ## Testing
 
-To run the tests:
-
 ```bash
+# To run the tests:
 mix test
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/pt301sc>.
-
