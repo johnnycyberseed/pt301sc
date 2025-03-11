@@ -143,7 +143,8 @@ defmodule TrackerShortcutWebTest do
         |> Router.call([])
 
       assert conn.status == 200
-      assert conn.resp_body =~ "Tracker to Shortcut Redirect Service"
+      assert conn.resp_body =~ "PT301SC"
+      assert conn.resp_body =~ "This service automatically redirects Pivotal Tracker URLs"
       assert conn.resp_body =~ "Supported URL Formats:"
       assert conn.resp_body =~ "Service Limitations:"
       assert conn.resp_body =~ "Epic URLs are not currently supported"

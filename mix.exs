@@ -24,7 +24,7 @@ defmodule Pt301sc.MixProject do
     [
       # Web server dependencies
       {:plug, "~> 1.14"},
-      {:plug_cowboy, "~> 2.6"},
+      {:bandit, "~> 1.0"},
       {:jason, "~> 1.4"} # For JSON handling
     ]
   end

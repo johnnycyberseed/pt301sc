@@ -15,36 +15,45 @@ defmodule Pt301sc.Application do
     # Store the mapper in the application environment for easy access
     Application.put_env(:pt301sc, :tracker_shortcut_mapper, mapper)
 
-    # Get port configuration from environment or use defaults
-    http_port = get_port_from_env("PT301SC_HTTP_PORT", 8080)
-    https_port = get_port_from_env("PT301SC_HTTPS_PORT", 8443)
-
     # Get hostname from environment or use default
     hostname = System.get_env("PT301SC_HOSTNAME") || "localhost"
 
-    # Define SSL options for HTTPS
-    https_options = [
-      port: https_port,
-      cipher_suite: :strong,
-      keyfile: "priv/cert/key.pem",
-      certfile: "priv/cert/cert.pem",
-      otp_app: :pt301sc
-    ]
+    # Get the Bandit configuration from the config files
+    http_config = Application.get_env(:pt301sc, :bandit_http)
+    https_config = Application.get_env(:pt301sc, :bandit_https)
 
-    children = [
-      # Start the HTTP Plug server
-      {Plug.Cowboy, scheme: :http, plug: TrackerShortcutWeb.Router, options: [port: http_port]},
-      # Start the HTTPS Plug server
-      {Plug.Cowboy, scheme: :https, plug: TrackerShortcutWeb.Router, options: https_options}
-    ]
+    # Resolve system environment variables in port configuration
+    http_config = resolve_port(http_config)
+    https_config = resolve_port(https_config)
+
+    # Check if we should start the servers
+    start_servers = Application.get_env(:pt301sc, :start_servers, Mix.env() != :test)
+
+    # Only start the servers if configured to do so
+    children = if start_servers do
+      [
+        # Start the HTTP Plug server
+        {Bandit, http_config},
+        # Start the HTTPS Plug server
+        {Bandit, https_config}
+      ]
+    else
+      []
+    end
 
     # Log server startup with port and URL information
     Logger.info("Starting PT301SC")
-    Logger.info("HTTP server listening on port #{http_port}")
-    Logger.info("HTTPS server listening on port #{https_port}")
-    Logger.info("Application URLs:")
-    Logger.info("  HTTP:  http://#{hostname}:#{http_port}/")
-    Logger.info("  HTTPS: https://#{hostname}:#{https_port}/")
+
+    if start_servers do
+      http_port = Keyword.get(http_config, :port)
+      https_port = Keyword.get(https_config, :port)
+
+      Logger.info("HTTP server listening on port #{http_port}")
+      Logger.info("HTTPS server listening on port #{https_port}")
+      Logger.info("Application URLs:")
+      Logger.info("  HTTP:  http://#{hostname}:#{http_port}/")
+      Logger.info("  HTTPS: https://#{hostname}:#{https_port}/")
+    end
 
     opts = [strategy: :one_for_one, name: Pt301sc.Supervisor]
     Supervisor.start_link(children, opts)
@@ -61,6 +70,16 @@ defmodule Pt301sc.Application do
             IO.puts("Warning: Invalid port value for #{env_var}, using default #{default}")
             default
         end
+    end
+  end
+
+  # Helper function to resolve system environment variables in port configuration
+  defp resolve_port(config) do
+    case Keyword.get(config, :port) do
+      {:system, env_var, default} ->
+        Keyword.put(config, :port, get_port_from_env(env_var, default))
+      port when is_integer(port) ->
+        config
     end
   end
 end
