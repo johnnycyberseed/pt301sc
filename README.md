@@ -10,25 +10,19 @@ A web server containing a mapping of Pivotal Tracker story IDs to their correspo
 
 To get going:
 
-1. Generate a Story Mapping file.
-
-   _(This repo is preloaded with the Vintro backlog; if you're using that backlog, you can skip this step.)_
-
-   If you recently migrated your Shortcut workspace, you can [Generate the Story Mapping File from a migrated Shortcut workspace](#generate-the-story-mapping-file-from-a-migrated-shortcut-workspace), below.
-   
-2. Resolve the Pivotal Tracker domain to your localhost.
+1. Resolve the Pivotal Tracker domain to your localhost.
 
    ```console
    $ ./scripts/route_pivotaltracker_to_localhost.sh
    ```
 
-3. Start the app
+2. Start the app
 
    ```console
    $ ./scripts/start.sh
    ```
 
-4. In your browser, navigate to a Pivotal Tracker URL (using Google Chrome as an example):
+3. In your browser, navigate to a Pivotal Tracker URL (using Google Chrome as an example):
 
    1. e.g. https://www.pivotaltracker.com/story/show/188947849
 
@@ -62,6 +56,10 @@ where:
 - `https://app.shortcut.com/vintro/story/188947849` is the corresponding Shortcut URL
 
 ### Generate the Story Mapping File from a migrated Shortcut workspace
+
+This repo has been preloaded with a `story_mapping.json` file containing most of the migrated Tracker stories in the MO boards.
+
+If you want to generate additional mappings, you can do so following the instructions below.
 
 If your migration tooling set the "external-links" field in your Shortcut stories, you can produce a `story_mapping.json` file directly from your Shortcut workspace (Shortcut's official [Pivotal Tracker importer](https://github.com/useshortcut/api-cookbook/tree/main/pivotal-import) tool _**does**_ set this field).
 

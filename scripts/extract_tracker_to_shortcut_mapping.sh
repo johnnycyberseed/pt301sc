@@ -38,9 +38,20 @@ stories=$(
 # Extract the URLs from the stories JSON.
 # => [{shortcut_url: "", tracker_url: ""}, ... ]
 #
-# Assumes that every Shortcut story's first "external link" is the Pivotal Tracker URL.
-# - this is true if you imported your Tracker stories via https://github.com/useshortcut/api-cookbook/tree/main/pivotal-import
-urls=$(echo "${stories}" | jq 'map({shortcut_url: .app_url, tracker_url: .external_links[0]})')
+# Fetch all stories with Pivotal Tracker links and for each Tracker URL found in external_links,
+# create a mapping to the Shortcut URL
+urls=$(echo "${stories}" | jq '
+  map(
+    select(any(.external_links[]; contains("www.pivotaltracker.com"))) | 
+    . as $story |
+    .external_links | 
+    map(select(contains("www.pivotaltracker.com"))) | 
+    map({
+      shortcut_url: $story.app_url, 
+      tracker_url: .
+    })
+  ) | flatten
+')
 
 # Transform into the format expected by the pt301sc application.
 # => { "(trackerid)": "(shortcuturl)", ... }
