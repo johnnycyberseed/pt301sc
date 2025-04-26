@@ -14,7 +14,7 @@ if [ -z "$SHORTCUT_API_TOKEN" ]; then
   For your convenience, if you save your token in a 1Password API Credential item named "shortcut-api-token",
   You can set the SHORTCUT_API_TOKEN environment variable by running:
 
-    $ source scripts/set_shortcut_token.bash
+    $ source scripts/set_shortcut_api_token.bash
 
   Example:
 
